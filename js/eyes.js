@@ -13,15 +13,9 @@ let cameraForEyes = null; // Re-use camera object from gestures? No, camera_util
 // If Eye Tracking is ON, Hand Tracking is OFF.
 
 if (eyeToggleBtn) {
-    eyeToggleBtn.addEventListener('click', async () => { // Added 'async' here
+    eyeToggleBtn.addEventListener('click', async () => {
         if (!isEyeTrackingActive) {
-            // Turn OFF Hand Tracking if active
-            if (window.appState && window.appState.isHandControlActive && typeof stopHandTracking === 'function') {
-                stopHandTracking();
-            }
-            await startEyeTracking(); // Added 'await' here
-            eyeToggleBtn.innerText = "Disable Eye Tracking";
-            eyeToggleBtn.classList.add('bg-orange-500', 'text-white'); // Changed from 900 to 500
+            await startEyeTracking();
             if (window.toggleVirtualCursor) window.toggleVirtualCursor(true);
         } else {
             stopEyeTracking();
@@ -32,11 +26,20 @@ if (eyeToggleBtn) {
     });
 }
 
-function startEyeTracking() {
+async function startEyeTracking() {
+    // 1. Enforce Exclusivity: Stop Hand Tracking if active
+    if (window.appState && window.appState.isHandControlActive && typeof window.stopHandTracking === 'function') {
+        console.log("Stopping Hand Tracking to enable Eye Tracking...");
+        window.stopHandTracking();
+    }
+
     isEyeTrackingActive = true;
-    // The button text and class are now handled in the event listener
-    // eyeToggleBtn.innerText = "Disable Eye Tracking";
-    // eyeToggleBtn.classList.add('bg-orange-900', 'text-white');
+
+    // Update UI Button State
+    if (eyeToggleBtn) {
+        eyeToggleBtn.innerText = "Disable Eye Tracking";
+        eyeToggleBtn.classList.add('bg-orange-500', 'text-white');
+    }
 
     document.getElementById('virtual-cursor').style.display = 'block';
 
@@ -56,9 +59,6 @@ function startEyeTracking() {
 
     // Check if camera is already running (from gestures.js?)
     // If not, start it.
-    // Note: If gestures.js stopped, cameraObj there is stopped.
-    // We create a new Camera instance here unless we refactor. 
-    // This might cause conflict if not careful, but mutually exclusive is safe.
 
     if (window.cameraObjEyes) {
         window.cameraObjEyes.start();
@@ -150,7 +150,7 @@ function handleGazeScroll(cursorY) {
 
     if (cursorY < scrollThreshold) {
         // Scroll Up
-        window.scrollBy({ top: -scrollSpeed, behavior: 'smooth' });
+        window.scrollBy({ top: -scrollSpeed, behavior: 'auto' });
         if (topIndicator) topIndicator.style.opacity = '1';
     } else {
         if (topIndicator) topIndicator.style.opacity = '0';
@@ -158,7 +158,7 @@ function handleGazeScroll(cursorY) {
 
     if (cursorY > window.innerHeight - scrollThreshold) {
         // Scroll Down
-        window.scrollBy({ top: scrollSpeed, behavior: 'smooth' });
+        window.scrollBy({ top: scrollSpeed, behavior: 'auto' });
         if (bottomIndicator) bottomIndicator.style.opacity = '1';
     } else {
         if (bottomIndicator) bottomIndicator.style.opacity = '0';

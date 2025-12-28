@@ -23,9 +23,6 @@ const smoothFactor = 0.1;
 if (handToggleBtn) {
     handToggleBtn.addEventListener('click', async () => {
         if (!isHandTracking) {
-            // Disable Eye Tracking if active
-            if (window.stopEyeTracking) window.stopEyeTracking();
-
             await startHandTracking();
         } else {
             stopHandTracking();
@@ -40,6 +37,13 @@ if (closeInstructionsBtn) {
 }
 
 async function startHandTracking() {
+    // 1. Enforce Exclusivity: Stop Eye Tracking if active
+    if (window.stopEyeTracking && (typeof window.isEyeTrackingActive !== 'undefined' ? window.isEyeTrackingActive : true)) {
+        // Note: isEyeTrackingActive might be scoped, but stopEyeTracking ensures it stops.
+        // We'll just call it to be safe.
+        window.stopEyeTracking();
+    }
+
     isHandTracking = true;
     window.appState.isHandControlActive = true;
 
@@ -168,10 +172,10 @@ function onResults(results) {
 
         // 3. Scroll Down (Fist / 0 fingers)
         // 3. Scroll Down (Fist / 0 fingers) - Smooth
-        if (fingerCount === 0) window.scrollBy({ top: 15, behavior: 'smooth' });
+        if (fingerCount === 0) window.scrollBy({ top: 15, behavior: 'auto' });
 
         // 4. Scroll Up (5 fingers) - Smooth
-        if (fingerCount === 5) window.scrollBy({ top: -15, behavior: 'smooth' });
+        if (fingerCount === 5) window.scrollBy({ top: -15, behavior: 'auto' });
     }
     handCtx.restore();
 }
